@@ -21,8 +21,12 @@ import { expireStaleTasks } from '@/lib/expiry'
  */
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  if (!rateLimit(ip, 120)) { // higher limit for polling workers
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
+  const rl = rateLimit(`next:${ip}`, 120, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limited' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    )
   }
 
   const apiKey = await validateApiKey(req)

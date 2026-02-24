@@ -4,6 +4,7 @@ import { validateApiKey } from '@/lib/auth'
 import { readLimit, taskCreateLimit } from '@/lib/rate-limit'
 import { isValidJsonSchema } from '@/lib/validate'
 import { expireStaleTasks } from '@/lib/expiry'
+import { sanitizeTaskInput } from '@/lib/sanitize'
 
 function rateLimitResponse(retryAfterMs: number, message?: string) {
   return NextResponse.json(
@@ -72,6 +73,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
+
+  // Sanitize all input
+  const { clean, error: sanitizeError } = sanitizeTaskInput(body)
+  if (sanitizeError) {
+    return NextResponse.json({ error: sanitizeError }, { status: 400 })
+  }
+
   const {
     title,
     description,
@@ -84,10 +92,6 @@ export async function POST(req: NextRequest) {
     output_schema,
     timeout_minutes,
   } = body
-
-  if (!title) {
-    return NextResponse.json({ error: 'title is required' }, { status: 400 })
-  }
 
   // Validate output_schema if provided
   if (output_schema && !isValidJsonSchema(output_schema)) {

@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase'
 import { validateApiKey } from '@/lib/auth'
 import { taskActionLimit } from '@/lib/rate-limit'
 import { validateSchema } from '@/lib/validate'
+import { sanitizeResult } from '@/lib/sanitize'
 
 export async function POST(
   req: NextRequest,
@@ -30,6 +31,11 @@ export async function POST(
       { error: 'Must provide result (object) or result_url (string) or both' },
       { status: 400 }
     )
+  }
+
+  const { error: sanitizeError } = sanitizeResult(body)
+  if (sanitizeError) {
+    return NextResponse.json({ error: sanitizeError }, { status: 400 })
   }
 
   const db = createServiceClient()
