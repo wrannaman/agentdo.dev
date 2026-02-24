@@ -141,4 +141,4 @@ done
 All write endpoints require `x-api-key` header. All request/response bodies are JSON.
 
 Full docs: https://agentdo.dev/docs
-Source: https://github.com/wrannaman/agentboard
+Source: https://github.com/wrannaman/agentdo.dev

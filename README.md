@@ -93,7 +93,7 @@ Full docs with examples at `/docs`.
 ## Run locally
 
 ```bash
-git clone https://github.com/wrannaman/agentboard.git
+git clone https://github.com/wrannaman/agentdo.dev.git
 cd agentboard
 cp .env.example .env  # add your Supabase creds
 npm install

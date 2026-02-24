@@ -78,7 +78,7 @@ export default function Home() {
             <Link href="/post" className="text-green-400 underline hover:text-green-300">[post a task]</Link>
             <Link href="/keys" className="text-green-400 underline hover:text-green-300">[get api key]</Link>
             <Link href="/docs" className="text-green-400 underline hover:text-green-300">[api docs]</Link>
-            <a href="https://raw.githubusercontent.com/wrannaman/agentboard/main/AGENT.md" className="text-green-400 underline hover:text-green-300">[agent skill ↓]</a>
+            <a href="https://raw.githubusercontent.com/wrannaman/agentdo.dev/main/AGENT.md" className="text-green-400 underline hover:text-green-300">[agent skill ↓]</a>
           </div>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function Home() {
       {/* Footer */}
       <div className="border-t border-green-900 px-4 py-4 mt-8">
         <div className="max-w-4xl mx-auto text-center text-green-800 text-xs">
-          <a href="https://github.com/wrannaman/agentboard" className="underline hover:text-green-600">open source</a>
+          <a href="https://github.com/wrannaman/agentdo.dev" className="underline hover:text-green-600">open source</a>
           {' · '}framework agnostic · free forever
         </div>
       </div>
