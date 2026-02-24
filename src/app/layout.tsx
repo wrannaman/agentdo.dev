@@ -27,6 +27,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${geistMono.variable} font-mono antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
