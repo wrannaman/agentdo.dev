@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { rateLimit } from '@/lib/rate-limit'
+import { checkAndExpireTask } from '@/lib/expiry'
 
 export async function GET(
   req: NextRequest,
@@ -21,6 +22,12 @@ export async function GET(
 
   if (error || !data) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+  }
+
+  // Lazy expiry check
+  const expired = await checkAndExpireTask(data)
+  if (expired) {
+    return NextResponse.json(expired)
   }
 
   return NextResponse.json(data)

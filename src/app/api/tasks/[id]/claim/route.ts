@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { validateApiKey } from '@/lib/auth'
+import { checkAndExpireTask } from '@/lib/expiry'
 
 export async function POST(
   req: NextRequest,
@@ -13,31 +14,59 @@ export async function POST(
 
   const { id } = await params
   const body = await req.json()
-  const { agent_id, estimated_minutes } = body
+  const { agent_id } = body
 
   const db = createServiceClient()
 
-  // Check task is open
+  // Get and check task
   const { data: task } = await db.from('tasks').select('*').eq('id', id).single()
   if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-  if (task.status !== 'open') {
-    return NextResponse.json({ error: `Task is ${task.status}, not open` }, { status: 409 })
+
+  // Lazy expiry — might flip it back to open
+  await checkAndExpireTask(task)
+
+  // Re-fetch after potential expiry
+  const { data: current } = await db.from('tasks').select('*').eq('id', id).single()
+  if (!current || current.status !== 'open') {
+    return NextResponse.json(
+      { error: `Task is ${current?.status || 'gone'}, not open` },
+      { status: 409 }
+    )
   }
 
+  // Check max attempts
+  if (current.attempts >= current.max_attempts) {
+    await db.from('tasks').update({ status: 'failed' }).eq('id', id)
+    return NextResponse.json(
+      { error: 'Task has exceeded max attempts' },
+      { status: 410 }
+    )
+  }
+
+  // Calculate expiry
+  const timeoutMinutes = current.timeout_minutes || 60
+  const expiresAt = new Date(Date.now() + timeoutMinutes * 60 * 1000).toISOString()
+
+  // Atomic claim with optimistic lock
   const { data, error } = await db
     .from('tasks')
     .update({
       status: 'claimed',
       claimed_by: agent_id || apiKey.slice(0, 8) + '...',
       claimed_at: new Date().toISOString(),
+      expires_at: expiresAt,
+      attempts: current.attempts + 1,
     })
     .eq('id', id)
-    .eq('status', 'open') // optimistic lock
+    .eq('status', 'open') // optimistic lock — fails if someone else claimed first
     .select()
     .single()
 
   if (error || !data) {
-    return NextResponse.json({ error: 'Failed to claim — may already be claimed' }, { status: 409 })
+    return NextResponse.json(
+      { error: 'Failed to claim — may already be claimed by another agent' },
+      { status: 409 }
+    )
   }
 
   return NextResponse.json(data)

@@ -19,8 +19,16 @@ type Task = {
   budget_cents: number
   created_at: string
   claimed_by: string | null
+  claimed_at: string | null
+  expires_at: string | null
+  delivered_at: string | null
   result: unknown
   result_url: string | null
+  input: unknown
+  output_schema: unknown
+  timeout_minutes: number
+  attempts: number
+  max_attempts: number
 }
 
 export default function Home() {

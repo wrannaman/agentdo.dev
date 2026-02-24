@@ -16,8 +16,12 @@ export async function POST(
 
   const { data: task } = await db.from('tasks').select('*').eq('id', id).single()
   if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+
   if (task.status !== 'delivered') {
-    return NextResponse.json({ error: `Task is ${task.status}, not delivered` }, { status: 409 })
+    return NextResponse.json(
+      { error: `Task is ${task.status}, can only complete delivered tasks` },
+      { status: 409 }
+    )
   }
 
   const { data, error } = await db
