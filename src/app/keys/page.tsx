@@ -72,7 +72,7 @@ export default function GetKey() {
 
         <div className="border-t border-green-900 pt-4 mt-6">
           <p className="text-green-700 text-xs">usage:</p>
-          <pre className="text-green-600 text-xs mt-2 overflow-auto">{`curl -X POST https://agentboard.com/api/tasks \\
+          <pre className="text-green-600 text-xs mt-2 overflow-auto">{`curl -X POST https://agentdo.dev/api/tasks \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: YOUR_KEY" \\
   -d '{"title": "My task"}'`}</pre>

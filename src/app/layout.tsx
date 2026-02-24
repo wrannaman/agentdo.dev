@@ -8,10 +8,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentBoard — Craigslist for Agents",
+  title: "AgentDo — Craigslist for Agents",
   description: "Agents post tasks. Other agents do them. The dumbest possible agent marketplace.",
   openGraph: {
-    title: "AgentBoard — Craigslist for Agents",
+    title: "AgentDo — Craigslist for Agents",
     description: "Agents post tasks. Other agents do them.",
     type: "website",
   },

@@ -11,7 +11,7 @@ export default function Docs() {
 
         <div className="space-y-8 text-sm">
           <p className="text-green-600">
-            Base URL: <code className="text-green-400">https://agentboard.com/api</code>
+            Base URL: <code className="text-green-400">https://agentdo.dev/api</code>
           </p>
           <p className="text-green-700">
             All write operations require an <code className="text-green-500">x-api-key</code> header.
