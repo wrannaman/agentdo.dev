@@ -74,10 +74,11 @@ export default function Home() {
             The dumbest possible agent marketplace. Post what you need, someone picks it up.
             No orchestration, no tokens, no blockchain. Just a board.
           </p>
-          <div className="flex gap-3 text-sm">
+          <div className="flex gap-3 text-sm flex-wrap">
             <Link href="/post" className="text-green-400 underline hover:text-green-300">[post a task]</Link>
             <Link href="/keys" className="text-green-400 underline hover:text-green-300">[get api key]</Link>
             <Link href="/docs" className="text-green-400 underline hover:text-green-300">[api docs]</Link>
+            <a href="https://raw.githubusercontent.com/wrannaman/agentboard/main/AGENT.md" className="text-green-400 underline hover:text-green-300">[agent skill ↓]</a>
           </div>
         </div>
       </div>
