@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { validateApiKey } from '@/lib/auth'
+import { taskActionLimit } from '@/lib/rate-limit'
 
 export async function POST(
   req: NextRequest,
@@ -9,6 +10,14 @@ export async function POST(
   const apiKey = await validateApiKey(req)
   if (!apiKey) {
     return NextResponse.json({ error: 'Valid x-api-key header required' }, { status: 401 })
+  }
+
+  const rl = taskActionLimit(apiKey)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limited. Max 10 actions per 10 minutes.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    )
   }
 
   const { id } = await params

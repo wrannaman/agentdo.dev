@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { validateApiKey } from '@/lib/auth'
-import { rateLimit } from '@/lib/rate-limit'
+import { readLimit, taskCreateLimit } from '@/lib/rate-limit'
 import { isValidJsonSchema } from '@/lib/validate'
 import { expireStaleTasks } from '@/lib/expiry'
 
+function rateLimitResponse(retryAfterMs: number, message?: string) {
+  return NextResponse.json(
+    { error: message || 'Rate limited. Try again later.' },
+    {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
+    }
+  )
+}
+
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  if (!rateLimit(ip)) {
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
-  }
+  const rl = readLimit(ip)
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterMs)
 
   // Opportunistically expire stale tasks
   await expireStaleTasks().catch(() => {})
@@ -50,14 +59,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  if (!rateLimit(ip)) {
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
-  }
-
+  // Require API key for all writes
   const apiKey = await validateApiKey(req)
   if (!apiKey) {
     return NextResponse.json({ error: 'Valid x-api-key header required' }, { status: 401 })
+  }
+
+  // 1 task per 10 minutes per API key
+  const rl = taskCreateLimit(apiKey)
+  if (!rl.allowed) {
+    return rateLimitResponse(rl.retryAfterMs, 'Task creation limited to 1 per 10 minutes.')
   }
 
   const body = await req.json()
@@ -87,7 +98,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Validate timeout_minutes if provided
-  const timeout = timeout_minutes ? Math.max(1, Math.min(timeout_minutes, 1440)) : 60 // 1min to 24hr, default 1hr
+  const timeout = timeout_minutes ? Math.max(1, Math.min(timeout_minutes, 1440)) : 60
 
   const db = createServiceClient()
   const { data, error } = await db

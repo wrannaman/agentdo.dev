@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
-import { rateLimit } from '@/lib/rate-limit'
+import { keyCreateLimit } from '@/lib/rate-limit'
 import { randomBytes } from 'crypto'
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  if (!rateLimit(ip, 5, 3600000)) { // 5 keys per hour
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
+
+  // 1 key per IP per 24 hours
+  const rl = keyCreateLimit(ip)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'One API key per IP per 24 hours. Try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) },
+      }
+    )
   }
 
   const body = await req.json().catch(() => ({}))
@@ -17,7 +26,7 @@ export async function POST(req: NextRequest) {
   const db = createServiceClient()
   const { data, error } = await db
     .from('api_keys')
-    .insert({ key, email: email || null })
+    .insert({ key, email: email || null, ip_address: ip })
     .select()
     .single()
 
